@@ -21,9 +21,9 @@ if (queueName) {
 }
 
 //
-// Static webpage for /text directory
+// Static webpage
 //
-app.use('/receipt/text', express.static(path.join(__dirname, 'text')));
+app.use('/receipt', express.static(path.join(__dirname, 'web')));
 
 //
 // Print to printer

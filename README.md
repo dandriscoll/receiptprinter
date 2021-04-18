@@ -40,8 +40,8 @@ In addition to the core printing functionality, the repo includes some useful ut
 
 | Path | Description |
 |---|---|
+| `GET http://PI_HOSTNAME/receipt` | Webpage with text form to print |
 | `POST http://PI_HOSTNAME/receipt` | Post text to print |
-| `GET http://PI_HOSTNAME/receipt/text` | Webpage with text form to print |
 | `POST http://PI_HOSTNAME/receipt/ifttt` | Endpoint for posting text from IFTTT to print |
 | `POST http://PI_HOSTNAME/receipt/today` | Print receipt with today's date formatted across a bunch of lines |
 | `POST http://PI_HOSTNAME/receipt/quote` | Load a random quote from `quotes/quotes.txt` and print it |
@@ -60,8 +60,8 @@ In addition to the core printing functionality, the repo includes some useful ut
 | `remotesite/` | Standalone website to run on cloud host to queue up text snips for non-NAT printer |
 | `remotesite/app.js` | Node.js server app |
 | `remotesite/web.config` | IISNode for running on Azure Web Apps |
-| `remotesite/QUEUENAME` | Client code to run on queue called `QUEUENAME` |
-| `text/` | Webpage exposed by Node.js app to accept text to print |
+| `remotesite/QUEUENAME` | Webpage to post to queue called `QUEUENAME` |
+| `web/` | Webpage exposed by Node.js app to accept text to print |
 | `quotes/` | Example illustrating how to print quotes with curl |
 | `receipt.js` | Node.js app to print to pi |
 | `reload.sh` | Script to reload source code from git and restart for headless operation |
