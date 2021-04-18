@@ -1,0 +1,21 @@
+{
+  "name": "receiptprinter",
+  "version": "1.0.0",
+  "main": "receipt.js",
+  "dependencies": {
+    "express": "^4.16.4",
+    "azure-storage": "^2.10.2",
+    "ip": "^1.1.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dandriscoll/receiptprinter"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

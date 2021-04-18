@@ -1,0 +1,14 @@
+#receipt-text {
+    display: block;
+    outline: none;
+    resize: none;
+    margin-bottom: 10px;
+    width: 40em;
+    height: 10em;
+}
+
+@media screen and (max-width: 425px) {
+    #receipt-text {
+        width: 100%;
+    }
+}

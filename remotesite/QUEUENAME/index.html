@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Create receipt</title>
+        <link rel="stylesheet" href="index.css" />
+        <script type="text/javascript">
+            function receiptPrintClick() {
+                var textarea = document.getElementById('receipt-text');
+                textarea.setAttribute('disabled', true);
+                var xhttp = new XMLHttpRequest();
+
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        textarea.removeAttribute('disabled');
+                        textarea.value = null;
+                    }
+                };
+
+                xhttp.open('POST', '/receipt/queue/QUEUENAME', true);
+                xhttp.setRequestHeader('Content-Type', 'text/plain');
+                xhttp.send(textarea.value + '\n\n\n\n');
+
+                return false;
+            }
+
+            function receiptPrintChecklistClick() {
+                var textarea = document.getElementById('receipt-text');
+
+                if (!textarea.value) {
+                    return false;
+                }
+
+                textarea.value = textarea.value
+                    .replace(/\n([^\n])/g, '\no $1')
+                    .replace(/^([^\n]*[^\n:])\n/, 'o $1\n');
+
+                return receiptPrintClick();
+            }
+
+            window.onload = function() {
+                var textarea = document.getElementById('receipt-text');
+                textarea.focus();
+            }
+        </script>
+    </head>
+    <body>
+        <textarea id="receipt-text" autofocus></textarea>
+        <button id="receipt-print" onclick="return receiptPrintClick();">Print</button>
+        <button id="receipt-print-checklist" onclick="return receiptPrintChecklistClick();">Checklist</button>
+    </body>
+</html>

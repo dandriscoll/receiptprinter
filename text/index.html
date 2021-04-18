@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Create receipt</title>
+        <link rel="stylesheet" href="index.css" />
+        <script type="text/javascript">
+            function receiptPrintClick() {
+                var textarea = document.getElementById('receipt-text');
+                textarea.setAttribute('disabled', true);
+                var xhttp = new XMLHttpRequest();
+
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        textarea.removeAttribute('disabled');
+                        textarea.value = null;
+                    }
+                };
+
+                xhttp.open('POST', '/receipt', true);
+                xhttp.setRequestHeader('Content-Type', 'text/plain');
+                xhttp.send(textarea.value + '\n\n\n\n');
+
+                return false;
+            }
+
+            window.onload = function() {
+                var textarea = document.getElementById('receipt-text');
+                textarea.focus();
+            }
+        </script>
+    </head>
+    <body>
+        <textarea id="receipt-text" autofocus></textarea>
+        <button id="receipt-print" onclick="return receiptPrintClick();">Print</button>
+    </body>
+</html>
