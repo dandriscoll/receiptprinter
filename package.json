@@ -38,5 +38,7 @@
     "type": "git",
     "url": "https://github.com/dandriscoll/receiptprinter"
   },
+  "keywords": ["thermal-printer", "receipt-printer", "escpos", "epson", "raspberry-pi"],
+  "author": "Dan Driscoll",
   "license": "ISC"
 }

@@ -1,8 +1,27 @@
 # receiptprinter
 
-A small, modern service that turns HTTP requests into receipts on a USB thermal
-printer. POST some text, and it prints — neatly normalized and padded so the
-cutter never clips your last line.
+> Turn an HTTP POST into a printed receipt on a USB thermal printer.
+
+A small, self-hosted Node.js service for anyone with a thermal receipt printer
+and a Raspberry Pi (or any Linux box). Point a script, a browser form, an IFTTT
+applet, or a home-automation webhook at it — whatever text you POST comes out of
+the printer, neatly normalized and padded so the cutter never clips your last
+line. No SDK, no cloud account, no print drivers.
+
+```console
+$ curl -X POST http://localhost:4180/print --data "Hello, receipt!"
+{"status":"printed","bytes":26}
+```
+```
+┌──────────────────────────┐
+│ Hello, receipt!          │   ← your text
+│                          │
+│                          │   ← auto-padding so the cut
+│                          │     never clips the last line
+│                          │
+│ ✁ - - - - - - - - - - - -│   ← paper cut
+└──────────────────────────┘
+```
 
 Developed against an **Epson TM-T20II** connected over USB to a Raspberry Pi,
 but any ESC/POS-compatible printer exposed as a character device (e.g.
@@ -135,3 +154,7 @@ service renders each receipt as: initialize (`ESC @`), the normalized text, the
 bottom padding lines, then a feed-and-cut (`GS V A`). All of that lives in
 `src/escpos.ts` as pure, unit-tested functions, so the rendering is identical
 whether it comes from the HTTP service or the `render` CLI.
+
+## License
+
+[ISC](LICENSE) © Dan Driscoll
