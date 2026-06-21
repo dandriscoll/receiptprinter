@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Receipt Printer</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Receipt printer</h1>
+      <form id="receipt-form">
+        <textarea
+          id="receipt-text"
+          name="text"
+          placeholder="Type something to print…"
+          autofocus
+        ></textarea>
+        <div class="row">
+          <button type="submit" id="receipt-print">Print</button>
+          <span id="status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </main>
+    <script type="module">
+      const form = document.getElementById("receipt-form");
+      const textarea = document.getElementById("receipt-text");
+      const button = document.getElementById("receipt-print");
+      const status = document.getElementById("status");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const text = textarea.value;
+        if (text.trim() === "") return;
+
+        button.disabled = true;
+        textarea.disabled = true;
+        status.textContent = "Printing…";
+
+        try {
+          // The server normalizes and pads the text, so we just send it raw.
+          const res = await fetch("/print", {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: text,
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          textarea.value = "";
+          status.textContent = "Printed ✓";
+        } catch (err) {
+          status.textContent = `Failed: ${err.message}`;
+        } finally {
+          button.disabled = false;
+          textarea.disabled = false;
+          textarea.focus();
+        }
+      });
+    </script>
+  </body>
+</html>

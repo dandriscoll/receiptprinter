@@ -1,0 +1,14 @@
+services:
+  receiptprinter:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "4180:4180"
+    environment:
+      PORT: "4180"
+      PRINTER_DEVICE: /dev/usb/lp0
+      BOTTOM_PADDING_LINES: "4"
+    # Pass the USB printer through to the container. Remove this block and set
+    # DRY_RUN=1 to run without a real printer.
+    devices:
+      - "/dev/usb/lp0:/dev/usb/lp0"

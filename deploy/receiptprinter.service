@@ -1,0 +1,24 @@
+# systemd unit for running receiptprinter directly on a host (e.g. a Raspberry
+# Pi). Install with:
+#   sudo cp deploy/receiptprinter.service /etc/systemd/system/
+#   sudo systemctl enable --now receiptprinter
+#
+# Adjust User, WorkingDirectory, and the device group to match your setup.
+[Unit]
+Description=Receipt printer service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/receiptprinter
+Environment=NODE_ENV=production
+Environment=PRINTER_DEVICE=/dev/usb/lp0
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+# Grant access to the USB printer device group (often lp or dialout).
+SupplementaryGroups=lp
+
+[Install]
+WantedBy=multi-user.target

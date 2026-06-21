@@ -1,68 +1,137 @@
 # receiptprinter
 
-This is a node app and pile of utilities for hooking a thermal receipt printer up to a website, Azure queue, Google Home, and more. When you've got the receipt printer hooked up, you can use it for creating lists, creating task sheets, or just printing text receipts.
+A small, modern service that turns HTTP requests into receipts on a USB thermal
+printer. POST some text, and it prints — neatly normalized and padded so the
+cutter never clips your last line.
 
-## Hardware
+Developed against an **Epson TM-T20II** connected over USB to a Raspberry Pi,
+but any ESC/POS-compatible printer exposed as a character device (e.g.
+`/dev/usb/lp0`) should work.
 
-The canonical hardware setup is a raspberry pi running the source in this repo, and an Epson TM-T20II attached over USB. The Pi doesn't have to be very powerful -- any modern Pi from the last five years should work. The TM-T20II can be found on eBay for around $100 and uses standard thermal printer paper, which is extremely inexpensive.
+## What it does
 
-Other printers may work but I've only tried the TM-T20II.
+- `GET /` — a web form to type and print text.
+- `POST /print` — print the request body. The body is the text; no JSON
+  envelope required.
+- `GET /healthz` — health check.
 
-## "Architecture" lol
+The service **fixes up incoming text** before printing: it normalizes line
+endings, trims trailing whitespace, and appends a configurable number of blank
+feed lines at the bottom so there's clearance before the paper cut. Clients just
+send their text — they no longer need to pad it themselves.
 
-This project includes a single Node.js app that runs on a raspi and sends properly-formatted text messages to a USB-connected Epson printer.
+## Quick start
 
-There are two ways for the Node.js app to get your text strings to print:
-1. **Direct** (*enabled by default*): If you're able to expose the Pi to the internet (and are comfortable doing so), it can expose a webpage and HTTP POST endpoint directly. Just point a browser to the webpage or an IFTTT integration to the endpoint.
-2. **Remote** (*enabled with connection string*): If you're unable to expose the Pi directly, or feel safer with some indirection, you can run an included Node app on an internet-facing website, which adds text items to print into a queue, which is monitored by the Pi.
+```bash
+npm install
+npm run build
+npm start
+# open http://localhost:4180/
+```
 
-In addition to the core printing functionality, the repo includes some useful utilities:
-- An **init.d** script to start the printer code on boot
-- A **"quotes" sample** with example contents and curl string to print memorable quotes
-- Tools to **restart** the raspi and **reload the printer's code from git**
+Print from the command line:
 
-## Setup
+```bash
+curl -X POST http://localhost:4180/print --data "Hello, receipt!"
+```
 
-1. Clone this project into a user directory on your raspi
-2. Edit `receipt.js`, `init.d/receipt.sh` and replace any ALL_CAPS text with your own
-3. `npm install`
-4. Copy `init.d/receipt.sh` to `/etc/init.d` and link in from init levels
-5. If using **remote** mode,
-    1. Log in to https://portal.azure.com and create an Azure Storage account, and get your connection string
-    2. Rename `remotesite/QUEUENAME` to your own name (e.g. `remotesite/home`)
-    3. Edit `remotesite/app.js` and replace an ALL_CAPS text with your own
-    4. `npm install`
-    5. Publish everything in the `remotesite/` directory to your internet-facing website
-6. If you want **reload/restart** functionality, cd into `restart` and `make restart`
-    - You may also need to edit `reload.sh` to make it work
+### No printer? Use dry-run
 
-## Routes
+```bash
+DRY_RUN=1 npm start        # renders to stdout instead of a device
+```
 
-| Path | Description |
-|---|---|
-| `GET http://PI_HOSTNAME/receipt` | Webpage with text form to print |
-| `POST http://PI_HOSTNAME/receipt` | Post text to print |
-| `POST http://PI_HOSTNAME/receipt/ifttt` | Endpoint for posting text from IFTTT to print |
-| `POST http://PI_HOSTNAME/receipt/today` | Print receipt with today's date formatted across a bunch of lines |
-| `POST http://PI_HOSTNAME/receipt/quote` | Load a random quote from `quotes/quotes.txt` and print it |
-| `POST http://PI_HOSTNAME/receipt/reload` | `git pull` and restart pi |
-| `POST http://PI_HOSTNAME/receipt/restart` | restart pi |
-| `GET http://REMOTE_SITE/receipt/QUEUENAME` | Webpage with text form to enqueue to QUEUENAME |
-| `POST http://REMOTE_SITE/receipt/queue/QUEUENAME` | Post text to enqueue to QUEUENAME |
-| `POST http://REMOTE_SITE/receipt/queue/QUEUENAME/ifttt` | Endpoint for posting text from IFTTT to print |
+## Sending text from the command line
 
-## Manifest
+The `client` CLI is an HTTP client for a running service — handy for scripting
+and for smoke-testing a deployment:
 
-| File | Description |
-|---|---|
-| `init.d/recipt.sh` | init.d script to start Node.js app |
-| `restart/` | Utility to restart the host OS remotely, if you want that |
-| `remotesite/` | Standalone website to run on cloud host to queue up text snips for non-NAT printer |
-| `remotesite/app.js` | Node.js server app |
-| `remotesite/web.config` | IISNode for running on Azure Web Apps |
-| `remotesite/QUEUENAME` | Webpage to post to queue called `QUEUENAME` |
-| `web/` | Webpage exposed by Node.js app to accept text to print |
-| `quotes/` | Example illustrating how to print quotes with curl |
-| `receipt.js` | Node.js app to print to pi |
-| `reload.sh` | Script to reload source code from git and restart for headless operation |
+```bash
+# POST text to /print (defaults to http://localhost:4180)
+npm run client -- "Hello, receipt"
 
+# Target another host
+npm run client -- --url http://pi.local:4180 "Hello"
+
+# Read from stdin
+echo "piped text" | npm run client
+
+# Smoke-test every route (health, web form, print, empty-body) and report
+npm run client -- --check
+```
+
+The target URL also reads from `$RECEIPT_URL`.
+
+## Generating printed output without a printer
+
+The `render` CLI produces the exact bytes the service would send, so you can
+inspect receipts, save fixtures, or pipe straight to a device:
+
+```bash
+# Raw ESC/POS bytes to stdout
+npm run render -- "Hello, receipt"
+
+# Annotated view (control codes shown as <ESC>@, <GS>VA<0>, …)
+npm run render -- --inspect "Hello"
+
+# Read from stdin
+echo "piped text" | npm run render
+
+# Write a gallery of sample receipts to ./out (.escpos + annotated .txt)
+npm run render -- --samples
+
+# Save to a file, then send it to a real printer
+npm run render -- --out receipt.escpos "Hi"
+cat receipt.escpos > /dev/usb/lp0
+```
+
+## Configuration
+
+All configuration is via environment variables (see `.env.example`):
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `4180` | HTTP listen port |
+| `PRINTER_DEVICE` | `/dev/usb/lp0` | Printer character device |
+| `DRY_RUN` | `0` | `1` renders to stdout instead of a device |
+| `BOTTOM_PADDING_LINES` | `4` | Blank feed lines added before the cut |
+| `MAX_BODY_SIZE` | `64kb` | Max body size for a single print |
+| `LOG_LEVEL` | `info` | pino log level |
+
+## Deployment
+
+### Docker
+
+```bash
+docker compose up --build
+```
+
+`docker-compose.yml` passes the USB printer device through to the container.
+Remove the `devices:` block and set `DRY_RUN=1` to run without a printer.
+
+### systemd (e.g. Raspberry Pi)
+
+Build (`npm run build`) on the host, then install the unit in
+`deploy/receiptprinter.service`:
+
+```bash
+sudo cp deploy/receiptprinter.service /etc/systemd/system/
+sudo systemctl enable --now receiptprinter
+```
+
+## Development
+
+```bash
+npm run dev        # watch-mode server
+npm test           # vitest
+npm run typecheck  # tsc --noEmit
+npm run lint       # biome
+```
+
+## How printing works
+
+Thermal printers speak [ESC/POS](https://en.wikipedia.org/wiki/ESC/P). The
+service renders each receipt as: initialize (`ESC @`), the normalized text, the
+bottom padding lines, then a feed-and-cut (`GS V A`). All of that lives in
+`src/escpos.ts` as pure, unit-tested functions, so the rendering is identical
+whether it comes from the HTTP service or the `render` CLI.

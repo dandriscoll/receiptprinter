@@ -1,21 +1,42 @@
 {
   "name": "receiptprinter",
-  "version": "1.0.0",
-  "main": "receipt.js",
-  "dependencies": {
-    "express": "^4.16.4",
-    "azure-storage": "^2.10.2",
-    "ip": "^1.1.5"
+  "version": "2.0.0",
+  "description": "A small, modern service that turns HTTP requests into receipts on a USB thermal printer.",
+  "type": "module",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
   },
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "render": "tsx scripts/render.ts",
+    "client": "tsx scripts/client.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pino": "^9.5.0",
+    "pino-http": "^10.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.0",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.6"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/dandriscoll/receiptprinter"
   },
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "license": "ISC"
 }
